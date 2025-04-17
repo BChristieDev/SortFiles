@@ -1,0 +1,61 @@
+#! /usr/bin/env bash
+
+# @file        bin/sort-files
+# @author      Brandon Christie <bchristie.dev@gmail.com>
+
+function numberToMonth()
+{
+  local -n _created=$1
+  local -a months=(January February March April May June July August September October November December)
+
+  _created[1]=${_created[1]/0/}
+  _created[1]=${months[${_created[1]}-1]}
+}
+
+function organize()
+{
+  local -r dir=$1
+  local -r sdir=$2
+  local file
+  local -a created
+
+  for file in "$dir"/*; do
+    if [[ -d $file ]]; then
+      organize "$file" "$sdir"
+    else
+      IFS='-' read -r -a created <<< "$(stat -c "%w" "$file" | cut -d ' ' -f 1)"
+      numberToMonth "created"
+
+      if [[ ! -d "$sdir/${created[0]}" ]]; then
+        mkdir "$sdir/${created[0]}"
+      fi
+
+      if [[ ! -d "$sdir/${created[0]}/${created[1]}" ]]; then
+        mkdir "$sdir/${created[0]}/${created[1]}"
+      fi
+
+      cp "$file" "$sdir/${created[0]}/${created[1]}"
+    fi
+  done
+}
+
+function main()
+{
+  local -r dir=${1%\/}
+  local -r sdir="${2%\/}"
+
+  if [[ ! -d $dir ]]; then
+    echo "$dir is not a directory" >&2
+    return 1
+  fi
+
+  if [[ -d $sdir ]]; then
+    echo "$sdir is already a directory" >&2
+    return 1
+  fi
+
+  mkdir "$sdir"
+  organize "$dir" "$sdir"
+}
+
+main "$@"
