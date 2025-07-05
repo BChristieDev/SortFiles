@@ -20,7 +20,7 @@ function organize()
 
   for file in "$dir"/*; do
     if [[ -d $file ]]; then
-      organize "$file" "$sdir"
+      organize "$file" "$sdir" &
       continue
     fi
 
