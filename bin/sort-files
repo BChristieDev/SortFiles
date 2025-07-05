@@ -21,14 +21,14 @@ function organize()
   for file in "$dir"/*; do
     if [[ -d $file ]]; then
       organize "$file" "$sdir"
-    else
-      IFS='-' read -r year month rest <<< "$(stat -c "%w" "$file" | cut -d ' ' -f 1)"
-      numberToMonth "month"
-
-      [[ -d "$sdir/$year/$month" ]] || mkdir -p "$sdir/$year/$month"
-
-      cp -- "$file" "$sdir/$year/$month"
+      continue
     fi
+
+    IFS='-' read -r year month rest <<<"$(stat -c "%w" "$file" | cut -d ' ' -f 1)"
+    numberToMonth "month"
+
+    [[ -d "$sdir/$year/$month" ]] || mkdir -p "$sdir/$year/$month"
+    cp -- "$file" "$sdir/$year/$month"
   done
 }
 
