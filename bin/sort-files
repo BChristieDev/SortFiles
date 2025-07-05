@@ -3,6 +3,8 @@
 # @file        bin/sort-files
 # @author      Brandon Christie <bchristie.dev@gmail.com>
 
+VERBOSE=0
+
 function numberToMonth()
 {
   local -n _month=$1
@@ -27,13 +29,41 @@ function organize()
     IFS='-' read -r year month rest <<<"$(stat -c "%w" "$file" | cut -d ' ' -f 1)"
     numberToMonth "month"
 
-    [[ -d "$sdir/$year/$month" ]] || mkdir -p "$sdir/$year/$month"
+    if [[ ! -d "$sdir/$year/$month" ]]; then
+      ((VERBOSE > 0)) && echo "creating directory: $sdir/$year/$month"
+      mkdir -p "$sdir/$year/$month"
+    fi
+
+    ((VERBOSE > 0)) && echo "copying '$file' to '$sdir/$year/$month'"
     cp -- "$file" "$sdir/$year/$month"
   done
 }
 
 function main()
 {
+  local -r opts=$(getopt -n "${BASH_SOURCE[0]}##*/" -o v -l verbose -- "$@") || exit
+
+  eval set -- "$opts"
+
+  while true; do
+    case "$1" in
+      -v|--verbose)
+        ((VERBOSE++))
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        ;;
+      *)
+        break
+        ;;
+    esac
+
+    shift
+  done
+
   local -r dir=${1%\/}
   local -r sdir="${2%\/}"
 
